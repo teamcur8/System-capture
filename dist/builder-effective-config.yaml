@@ -1,0 +1,26 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.audio.streamer
+productName: Audio Streamer
+files:
+  - filter:
+      - electron-main.js
+      - electron-renderer.js
+      - electron-renderer.html
+      - electron-preload.js
+      - electron-login.html
+      - electron-login.js
+      - electron-login-preload.js
+      - database-manager.js
+      - assets/**/*
+      - build/Release/wasapi_capture.node
+      - node_modules/**/*
+      - package.json
+win:
+  target: portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+electronVersion: 28.3.3
