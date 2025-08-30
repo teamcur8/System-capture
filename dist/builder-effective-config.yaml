@@ -1,26 +1,34 @@
 directories:
   output: dist
   buildResources: build
-appId: com.audio.streamer
-productName: Audio Streamer
+appId: com.echo.audiostreamer
+productName: Echo - Audio Streamer
 files:
   - filter:
-      - electron-main.js
-      - electron-renderer.js
-      - electron-renderer.html
-      - electron-preload.js
-      - electron-login.html
-      - electron-login.js
-      - electron-login-preload.js
-      - database-manager.js
-      - assets/**/*
+      - src/**/*
       - build/Release/wasapi_capture.node
       - node_modules/**/*
       - package.json
+      - LICENSE.txt
+extraResources:
+  - from: build/Release/wasapi_capture.node
+    to: wasapi_capture.node
 win:
-  target: portable
+  target:
+    - target: portable
+      arch:
+        - x64
+  sign: false
+  signAndEditExecutable: false
+  artifactName: Echo-Audio-Streamer-Portable-${version}.${ext}
+  certificateFile: null
+  certificatePassword: <stripped sensitive data>
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Echo Audio Streamer
+  perMachine: true
+  deleteAppDataOnUninstall: false
 electronVersion: 28.3.3

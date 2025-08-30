@@ -1,9 +1,9 @@
 {
-  "name": "system-capture",
+  "name": "echo-audio-streamer",
   "version": "1.0.0",
-  "description": "System audio capture native addon",
-  "main": "electron-main.js",
-  "bin": "audio-streamer.js",
+  "description": "Echo - Smart Real-Time Call Recorder with user authentication and native audio capture",
+  "main": "src/main/main.js",
+  "bin": "scripts/audio-streamer.js",
   "dependencies": {
     "bindings": "^1.5.0",
     "ffmpeg": "^0.0.4",
@@ -23,47 +23,93 @@
     "clean": "node-gyp clean",
     "configure": "node-gyp configure",
     "build": "node-gyp build",
-    "build-exe": "pkg . --target node18-win-x64 --output audio-streamer.exe",
-    "start": "node realtime_ws_stream_auto.js",
-    "test": "node test_mic_loopback.js",
+    "build-native": "cd src/native && node-gyp rebuild",
+    "build-exe": "pkg scripts/audio-streamer.js --target node18-win-x64 --output dist/audio-streamer.exe",
+    "start": "node scripts/realtime-ws-stream.js",
+    "test": "node scripts/test/test-mic-loopback.js",
+    "test-mic": "node scripts/test/test-mic-only.js",
+    "test-loopback": "node scripts/test/test-mic-loopback.js",
+    "test-login": "node scripts/test/test-login-api.js",
+    "test-database": "node -e \"require('./src/database/database-manager.js').testConnection()\"",
     "electron": "electron .",
     "electron-dev": "electron . --dev",
     "build-electron": "electron-builder",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win",
+    "docs": "echo 'Documentation available in docs/ folder'"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "pkg": {
     "assets": [
-      "build/Release/wasapi_capture.node"
+      "build/Release/wasapi_capture.node",
+      "src/**/*"
     ],
     "targets": [
       "node18-win-x64"
     ]
   },
   "build": {
-    "appId": "com.audio.streamer",
-    "productName": "Audio Streamer",
+    "appId": "com.echo.audiostreamer",
+    "productName": "Echo - Audio Streamer",
     "directories": {
       "output": "dist"
     },
     "files": [
-      "electron-main.js",
-      "electron-renderer.js",
-      "index.js",
+      "src/**/*",
       "build/Release/wasapi_capture.node",
       "node_modules/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE.txt"
+    ],
+    "extraResources": [
+      {
+        "from": "build/Release/wasapi_capture.node",
+        "to": "wasapi_capture.node"
+      }
     ],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "sign": false,
+      "signAndEditExecutable": false,
+      "artifactName": "Echo-Audio-Streamer-Portable-${version}.${ext}",
+      "certificateFile": null,
+      "certificatePassword": null
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Echo Audio Streamer",
+      "perMachine": true,
+      "deleteAppDataOnUninstall": false
     }
-  }
+  },
+  "keywords": [
+    "audio",
+    "streaming",
+    "electron",
+    "wasapi",
+    "websocket",
+    "mongodb",
+    "authentication",
+    "real-time",
+    "call-recorder"
+  ],
+  "author": "Echo Development Team",
+  "license": "Proprietary",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/echo/audio-streamer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/echo/audio-streamer/issues"
+  },
+  "homepage": "https://github.com/echo/audio-streamer#readme"
 }
