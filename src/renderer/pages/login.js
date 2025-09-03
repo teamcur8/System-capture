@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusMessage = document.getElementById('statusMessage');
     const progressBar = document.getElementById('progressBar');
     const invalidCredentials = document.getElementById('invalidCredentials');
+    const togglePassword = document.getElementById('togglePassword');
 
     console.log('🔍 [RENDERER] Elements found:');
     console.log('  - loginForm:', loginForm ? 'FOUND' : 'NOT FOUND');
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('  - statusMessage:', statusMessage ? 'FOUND' : 'NOT FOUND');
     console.log('  - progressBar:', progressBar ? 'FOUND' : 'NOT FOUND');
     console.log('  - invalidCredentials:', invalidCredentials ? 'FOUND' : 'NOT FOUND');
+    console.log('  - togglePassword:', togglePassword ? 'FOUND' : 'NOT FOUND');
 
     // Check if electronAPI is available
     console.log('🔍 [RENDERER] Checking electronAPI availability:');
@@ -58,6 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
             handleLogin();
         }
     });
+
+    // Toggle password visibility
+    if (togglePassword) {
+        togglePassword.addEventListener('click', () => {
+            const isPwd = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPwd ? 'text' : 'password');
+            togglePassword.textContent = isPwd ? 'Hide' : 'Show';
+            togglePassword.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+        });
+    }
 
     async function handleLogin() {
         console.log('🔍 [RENDERER] handleLogin called');

@@ -5,9 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
-    const reconnectBtn = document.getElementById('reconnect-btn');
     const logoutBtn = document.getElementById('logout-btn');
-    const testDbBtn = document.getElementById('test-db-btn');
     
     const micStatus = document.getElementById('mic-status');
     const systemStatus = document.getElementById('system-status');
@@ -19,19 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const websocketText = document.getElementById('websocket-text');
     const streamingText = document.getElementById('streaming-text');
     
-    const micChunks = document.getElementById('mic-chunks');
-    const systemChunks = document.getElementById('system-chunks');
-    const logContent = document.getElementById('log-content');
+    // Simplified UI: no chunks or logs
 
     // Button event listeners
     startBtn.addEventListener('click', async () => {
         try {
             startBtn.disabled = true;
-            addLog('Starting streaming...', 'info');
+            // simplified: no log
             await window.electronAPI.startStreaming();
             // Don't re-enable start button here - let status update handle it
         } catch (error) {
-            addLog('Failed to start streaming: ' + error.message, 'error');
+            console.error('Failed to start streaming:', error);
             startBtn.disabled = false; // Re-enable only on error
         }
     });
@@ -39,55 +35,28 @@ document.addEventListener('DOMContentLoaded', () => {
     stopBtn.addEventListener('click', async () => {
         try {
             stopBtn.disabled = true;
-            addLog('Stopping streaming...', 'info');
+            // simplified: no log
             await window.electronAPI.stopStreaming();
             // Don't re-enable stop button here - let status update handle it
         } catch (error) {
-            addLog('Failed to stop streaming: ' + error.message, 'error');
+            console.error('Failed to stop streaming:', error);
             stopBtn.disabled = false; // Re-enable only on error
-        }
-    });
-
-    reconnectBtn.addEventListener('click', async () => {
-        try {
-            reconnectBtn.disabled = true;
-            addLog('Reconnecting...', 'info');
-            await window.electronAPI.reconnect();
-        } catch (error) {
-            addLog('Failed to reconnect: ' + error.message, 'error');
-        } finally {
-            reconnectBtn.disabled = false;
         }
     });
 
     logoutBtn.addEventListener('click', async () => {
         try {
             logoutBtn.disabled = true;
-            addLog('Logging out...', 'info');
+            // simplified: no log
             await window.electronAPI.logout();
         } catch (error) {
-            addLog('Failed to logout: ' + error.message, 'error');
+            console.error('Failed to logout:', error);
         } finally {
             logoutBtn.disabled = false;
         }
     });
 
-    testDbBtn.addEventListener('click', async () => {
-        try {
-            testDbBtn.disabled = true;
-            addLog('Testing database connection...', 'info');
-            const result = await window.electronAPI.testDatabase();
-            if (result.success) {
-                addLog('✅ Database connection successful!', 'success');
-            } else {
-                addLog('❌ Database connection failed: ' + (result.error || 'Unknown error'), 'error');
-            }
-        } catch (error) {
-            addLog('Failed to test database: ' + error.message, 'error');
-        } finally {
-            testDbBtn.disabled = false;
-        }
-    });
+    // Removed reconnect and test DB controls from UI
 
     // IPC event listeners
     window.electronAPI.onStatusUpdate((event, status) => {
@@ -98,13 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateChunks(chunks);
     });
 
-    window.electronAPI.onLog((event, message) => {
-        addLog(message, 'info');
-    });
+    // Logs removed
 
-    window.electronAPI.onError((event, error) => {
-        addLog(error, 'error');
-    });
+    // Error log UI removed
 
     // Helper functions
     function updateStatus(status) {
@@ -140,19 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (status.websocket) {
                 case 'connected':
                     websocketStatus.className = 'status-card active';
-                    websocketText.textContent = 'Connected';
+                    websocketText.textContent = 'Echo connected';
                     break;
                 case 'connecting':
                     websocketStatus.className = 'status-card';
-                    websocketText.textContent = 'Connecting...';
+                    websocketText.textContent = 'Echo connecting...';
                     break;
                 case 'disconnected':
                     websocketStatus.className = 'status-card inactive';
-                    websocketText.textContent = 'Disconnected';
+                    websocketText.textContent = 'Echo disconnected';
                     break;
                 case 'error':
                     websocketStatus.className = 'status-card inactive';
-                    websocketText.textContent = 'Error';
+                    websocketText.textContent = 'Echo error';
                     break;
             }
         }
@@ -175,42 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updateChunks(chunks) {
-        if (chunks.mic !== undefined) {
-            micChunks.textContent = chunks.mic.toLocaleString();
-        }
-        if (chunks.system !== undefined) {
-            systemChunks.textContent = chunks.system.toLocaleString();
-        }
-    }
+    function updateChunks() { /* removed */ }
 
-    function addLog(message, type = 'info') {
-        const logEntry = document.createElement('div');
-        logEntry.className = `log-entry ${type}`;
-        
-        const timestamp = new Date().toLocaleTimeString();
-        logEntry.textContent = `[${timestamp}] ${message}`;
-        
-        logContent.appendChild(logEntry);
-        
-        // Auto-scroll to bottom
-        logContent.scrollTop = logContent.scrollHeight;
-        
-        // Keep only last 50 log entries
-        while (logContent.children.length > 50) {
-            logContent.removeChild(logContent.firstChild);
-        }
-    }
+    // addLog removed
 
     // Initialize status and user info
     async function initializeStatus() {
         try {
             const status = await window.electronAPI.getStatus();
             updateStatus(status);
-            updateChunks({
-                mic: status.micChunks || 0,
-                system: status.systemChunks || 0
-            });
+            // chunks removed
             
             // Get and display user information
             const userInfo = await window.electronAPI.getUserInfo();
@@ -249,10 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize on load
     initializeStatus();
 
-    // Add some helpful tips
-    setTimeout(() => {
-        addLog('💡 Tip: Make sure your microphone is working and you have permission to access it.', 'info');
-    }, 2000);
+    // Removed tip
 
     // Periodic button state check (every 2 seconds)
     setInterval(() => {

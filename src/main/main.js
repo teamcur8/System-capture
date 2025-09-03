@@ -72,6 +72,13 @@ function makeHttpsRequest(url, options = {}) {
             reject(err);
         });
 
+        // Apply timeout if provided, default 8000ms
+        const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 8000;
+        req.setTimeout(timeoutMs, () => {
+            console.error(`DEBUG: Request timeout after ${timeoutMs}ms`);
+            req.destroy(new Error('ETIMEDOUT'));
+        });
+
         if (options.data) {
             console.log(`DEBUG: Writing data: ${options.data}`);
             req.write(options.data);
@@ -131,18 +138,6 @@ async function performLogin(email, password) {
     try {
         console.log(`DEBUG: Starting login for email: ${email}`);
         
-        // Initialize database connection if not already connected
-        if (!dbManager) {
-            console.log(`DEBUG: Initializing database connection...`);
-            try {
-                dbManager = new DatabaseManager();
-                await dbManager.connect();
-            } catch (dbError) {
-                console.error(`DEBUG: Database connection failed:`, dbError);
-                console.log(`DEBUG: Continuing without database...`);
-            }
-        }
-
         // First API call - Authentication (using the same function as Python)
         const authUrl = "https://transform.cur8.in/webservice/rest/server.php";
         const authParams = {
@@ -161,7 +156,8 @@ async function performLogin(email, password) {
             method: 'GET',
             headers: {
                 'User-Agent': 'Echo-Desktop-App/1.0'
-            }
+            },
+            timeout: 8000
         });
 
         console.log(`DEBUG: User lookup result type: ${typeof authResult}`);
@@ -196,7 +192,8 @@ async function performLogin(email, password) {
                     'Content-Length': Buffer.byteLength(postData),
                     'User-Agent': 'Echo-Desktop-App/1.0'
                 },
-                data: postData
+                data: postData,
+                timeout: 8000
             });
             
             console.log(`DEBUG: Password verification result:`, verifyResult);
@@ -220,18 +217,18 @@ async function performLogin(email, password) {
                 // Add email to user data
                 userData.email = email;
                 
-                // Save to database
-                if (dbManager) {
-                    try {
-                        const saveResult = await dbManager.saveUserData(email, userData);
-                        if (!saveResult) {
-                            console.error('Failed to save user data to database');
-                            // Continue anyway, as the login was successful
-                        }
-                    } catch (dbError) {
-                        console.error('Database save error:', dbError);
-                        // Continue anyway, as the login was successful
+                // Save to database (deferred connect after successful auth)
+                try {
+                    if (!dbManager) {
+                        dbManager = new DatabaseManager();
+                        await dbManager.connect();
                     }
+                    const saveResult = await dbManager.saveUserData(email, userData);
+                    if (!saveResult) {
+                        console.error('Failed to save user data to database');
+                    }
+                } catch (dbError) {
+                    console.error('Database save error (non-fatal):', dbError);
                 }
                 
                 // Update global user params
@@ -405,6 +402,10 @@ function connectWebSocket() {
         console.log('🔌 WebSocket connection closed');
         sendToRenderer('log', 'WebSocket connection closed');
         sendToRenderer('status-update', { websocket: 'disconnected' });
+        // Ensure UI reflects devices are inactive when socket closes
+        micStarted = false;
+        systemStarted = false;
+        sendToRenderer('status-update', { mic: false, system: false });
         if (streaming) {
             console.log('⚠️ Connection lost. Use "reconnect" to try again.');
             sendToRenderer('log', 'Connection lost. Use reconnect to try again.');
@@ -462,13 +463,15 @@ function stopStreaming() {
     
     console.log('✅ Streaming stopped');
     sendToRenderer('log', 'Streaming stopped');
-    sendToRenderer('status-update', { streaming: false });
+    // Ensure all statuses are reflected as inactive
+    sendToRenderer('status-update', { streaming: false, mic: false, system: false, websocket: 'disconnected' });
 }
 
 function createLoginWindow() {
     loginWindow = new BrowserWindow({
         width: 450,
         height: 700,
+        icon: 'E:\\EChoo\\testingEcho\\systemCapture\\build\\icon.ico',
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -482,6 +485,7 @@ function createLoginWindow() {
     });
 
     loginWindow.loadFile(path.join(__dirname, '../renderer/pages/login.html'));
+    loginWindow.setMenu(null);
 
     loginWindow.once('ready-to-show', () => {
         loginWindow.show();
@@ -499,6 +503,7 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        icon: 'E:\\EChoo\\testingEcho\\systemCapture\\build\\icon.ico',
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -510,6 +515,7 @@ function createMainWindow() {
     });
 
     mainWindow.loadFile(path.join(__dirname, '../renderer/pages/main.html'));
+    mainWindow.setMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();

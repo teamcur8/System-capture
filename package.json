@@ -14,8 +14,10 @@
   "devDependencies": {
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
+    "jimp": "^0.22.12",
     "node-gyp": "^10.0.1",
-    "pkg": "^5.8.1"
+    "pkg": "^5.8.1",
+    "png-to-ico": "^2.1.8"
   },
   "scripts": {
     "install": "node-gyp rebuild",
@@ -34,6 +36,7 @@
     "electron": "electron .",
     "electron-dev": "electron . --dev",
     "build-electron": "electron-builder",
+    "generate-icon": "node scripts/generate-ico.js",
     "dist": "electron-builder --win",
     "docs": "echo 'Documentation available in docs/ folder'"
   },
@@ -72,11 +75,12 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "sign": false,
-      "signAndEditExecutable": false,
+      "icon": "build/icon.ico",
       "artifactName": "Echo-Audio-Streamer-Portable-${version}.${ext}",
       "certificateFile": null,
       "certificatePassword": null
