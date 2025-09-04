@@ -168,7 +168,7 @@ void DoCapture(CaptureContext *ctx, int deviceIndex)
     audioClient->GetMixFormat(&deviceFormat);
 
     // Try multiple sample rates in order of preference
-    int sampleRates[] = {48000, 44100, 16000, 8000};
+    int sampleRates[] = {16000, 48000, 44100, 8000};
     int channels = deviceFormat->nChannels;
     int sampleRate = 48000; // default
     bool initialized = false;

@@ -335,7 +335,6 @@ function startAudioCaptures() {
 
 function sendChunk(source, chunk, ch, rate) {
     try {
-        // Downsample to mono 16kHz 16bit
         const buf = downsampleBuffer(chunk, ch, rate, 1, 16000);
         
         // Send as binary data

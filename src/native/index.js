@@ -1,4 +1,25 @@
-const addon = require('bindings')('wasapi_capture');
+const path = require('path');
+let addon;
+
+try {
+  // Try to load from the build directory first (development)
+  addon = require(path.join(__dirname, 'build/Release/wasapi_capture.node'));
+} catch (e) {
+  console.warn('Failed to load addon from build/Release, trying other paths:', e.message);
+  try {
+    // Fallback for packaged Electron app (production)
+    if (process.resourcesPath) {
+      const addonPath = path.join(process.resourcesPath, 'wasapi_capture.node');
+      addon = require(addonPath);
+    } else {
+      // Fallback for general Node.js environment or other Electron setups
+      addon = require('bindings')('wasapi_capture');
+    }
+  } catch (e2) {
+    console.error('Failed to load addon from all known paths:', e2);
+    throw e2; // Re-throw if still unable to load
+  }
+}
 const fs = require('fs');
 
 /**

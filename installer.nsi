@@ -1,5 +1,5 @@
 ; Echo Audio Streamer - Professional NSIS Installer
-; This creates a proper setup.exe installer like games and other applications
+; Creates a proper setup.exe installer
 
 !define APP_NAME "Echo Audio Streamer"
 !define APP_VERSION "1.0.0"
@@ -44,116 +44,73 @@ RequestExecutionLevel admin
 ; Installer Sections
 Section "Main Application" SecMain
     SetOutPath "$INSTDIR"
-    
-    ; Copy the pre-built Electron application
+
     DetailPrint "Copying application files..."
-    File /r "dist\win-unpacked\*"
-    
+    ; Copy entire Electron build output
+    File /r "dist\win-unpacked\*.*"
+    ; Copy license into install dir
+    File "LICENSE.txt"
+
     ; Verify the main executable was copied
     IfFileExists "$INSTDIR\Echo - Audio Streamer.exe" +3
-        MessageBox MB_OK|MB_ICONSTOP "Error: Failed to copy application files!$\r$\n$\r$\nPlease try running the installer as Administrator."
+        MessageBox MB_OK|MB_ICONSTOP "Error: Failed to copy application files!$\r$\nPlease try running the installer as Administrator."
         Abort
-    
+
     ; Create application data directories
-    CreateDirectory "$LOCALAPPDATA\${APP_NAME}"
     CreateDirectory "$LOCALAPPDATA\${APP_NAME}\logs"
     CreateDirectory "$LOCALAPPDATA\${APP_NAME}\config"
-    
 
-    
+    ; Create desktop shortcut
+    CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Echo - Audio Streamer.exe"
 
-    
-    ; Create simple batch launcher
-    FileOpen $0 "$INSTDIR\${APP_EXE}.bat" w
-    FileWrite $0 '@echo off$\r$\n'
-    FileWrite $0 'cd /d "$INSTDIR"$\r$\n'
-    FileWrite $0 'start "" "Echo - Audio Streamer.exe"$\r$\n'
-    FileClose $0
-    
-    ; Create desktop shortcut (direct executable)
-    CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Echo - Audio Streamer.exe" "" "$INSTDIR\Echo - Audio Streamer.exe" 0
-    
-    ; Create start menu shortcut (direct executable)
+    ; Create start menu shortcuts
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\Echo - Audio Streamer.exe" "" "$INSTDIR\Echo - Audio Streamer.exe" 0
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
-    
+    CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\Echo - Audio Streamer.exe"
+    CreateShortCut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
 
-    
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
-    
-    ; Registry information for add/remove programs
+
+    ; Registry info for Add/Remove Programs
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayName" "${APP_NAME}"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" "$INSTDIR\Uninstall.exe"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayIcon" "$INSTDIR\Echo - Audio Streamer.exe"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "Publisher" "${APP_PUBLISHER}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayVersion" "${APP_VERSION}"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoRepair" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "EstimatedSize" 200000
-    
-    ; Registry information for the application
+
+    ; Registry info for app
     WriteRegStr HKLM "Software\${APP_NAME}" "Install_Dir" "$INSTDIR"
 SectionEnd
 
 ; Uninstaller Section
 Section "Uninstall"
-    ; Remove application files
-    Delete "$INSTDIR\Echo - Audio Streamer.exe"
-    RMDir /r "$INSTDIR\resources"
-    RMDir /r "$INSTDIR\locales"
-    Delete "$INSTDIR\*.pak"
-    Delete "$INSTDIR\*.dll"
-    Delete "$INSTDIR\*.bin"
-    Delete "$INSTDIR\*.json"
-    Delete "$INSTDIR\*.dat"
-    Delete "$INSTDIR\*.html"
-    Delete "$INSTDIR\*.txt"
-    Delete "$INSTDIR\${APP_EXE}.bat"
-    Delete "$INSTDIR\Uninstall.exe"
-    RMDir "$INSTDIR"
-    
-    ; Remove shortcuts
+    RMDir /r "$INSTDIR"
     Delete "$DESKTOP\${APP_NAME}.lnk"
     RMDir /r "$SMPROGRAMS\${APP_NAME}"
-    
-    ; Remove application data
     RMDir /r "$LOCALAPPDATA\${APP_NAME}"
-    
-    ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
     DeleteRegKey HKLM "Software\${APP_NAME}"
 SectionEnd
 
 ; Function to check system requirements
 Function .onInit
-    ; Check Windows version
     ${If} ${AtLeastWin10}
-        ; Windows 10 or newer - OK
     ${Else}
-        MessageBox MB_OK|MB_ICONSTOP "This application requires Windows 10 or newer.$\r$\n$\r$\nYou are running an older version of Windows.$\r$\nThe application may not work correctly."
+        MessageBox MB_OK|MB_ICONSTOP "This application requires Windows 10 or newer.$\r$\nThe application may not work correctly."
     ${EndIf}
-    
-    ; Check if required files exist
-    IfFileExists "dist\win-unpacked\Echo - Audio Streamer.exe" +3
-        MessageBox MB_OK|MB_ICONSTOP "Error: Application files are missing!$\r$\n$\r$\nPlease make sure the installer is complete and not corrupted."
-        Abort
-    
-    IfFileExists "LICENSE.txt" +3
-        MessageBox MB_OK|MB_ICONSTOP "Error: License file is missing!$\r$\n$\r$\nPlease make sure the installer is complete and not corrupted."
-        Abort
 FunctionEnd
 
 ; Function to run the application after installation
 Function .onInstSuccess
-    MessageBox MB_YESNO "Installation completed successfully!$\r$\n$\r$\nWould you like to start ${APP_NAME} now?" IDYES LaunchApp IDNO NoLaunch
+    MessageBox MB_YESNO "Installation completed successfully!$\r$\nWould you like to start ${APP_NAME} now?" IDYES LaunchApp
     LaunchApp:
         Exec "$INSTDIR\Echo - Audio Streamer.exe"
-    NoLaunch:
 FunctionEnd
 
 ; Function to handle installation failures
 Function .onInstFailed
-    MessageBox MB_OK|MB_ICONSTOP "Installation failed!$\r$\n$\r$\nPlease try the following:$\r$\n1. Run the installer as Administrator$\r$\n2. Make sure you have enough disk space$\r$\n3. Temporarily disable antivirus software$\r$\n4. Try installing to a different location"
+    MessageBox MB_OK|MB_ICONSTOP "Installation failed!$\r$\nPlease try:$\r$\n1. Run as Administrator$\r$\n2. Ensure enough disk space$\r$\n3. Disable antivirus temporarily$\r$\n4. Try another install location"
 FunctionEnd

@@ -60,14 +60,14 @@
     },
     "files": [
       "src/**/*",
-      "build/Release/wasapi_capture.node",
+      "src/native/build/Release/wasapi_capture.node",
       "node_modules/**/*",
       "package.json",
       "LICENSE.txt"
     ],
     "extraResources": [
       {
-        "from": "build/Release/wasapi_capture.node",
+        "from": "src/native/build/Release/wasapi_capture.node",
         "to": "wasapi_capture.node"
       }
     ],
